@@ -13,4 +13,9 @@ public abstract class GameRendererMixin {
 	private void blur$render(float tickDelta, long limitTime, CallbackInfo ci) {
 		BlurRenderer.render();
 	}
+
+	@Inject(method = "render(FJ)V", at = @At("TAIL"))
+	private void blur$renderScreenId(float tickDelta, long limitTime, CallbackInfo ci) {
+		BlurRenderer.renderScreenId();
+	}
 }

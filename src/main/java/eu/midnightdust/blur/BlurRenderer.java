@@ -17,6 +17,7 @@ import net.minecraft.client.render.shaders.Uniform;
 import net.minecraft.resource.Identifier;
 import org.lwjgl.opengl.GL11;
 
+import java.awt.Color;
 import java.io.IOException;
 
 public final class BlurRenderer extends GuiElement {
@@ -51,7 +52,7 @@ public final class BlurRenderer extends GuiElement {
 		for (PostPass pass : ((PostChainAccessor) shader).blur$getPasses()) {
 			Uniform radius = pass.getEffect().getUniform("Radius");
 			Uniform progress = pass.getEffect().getUniform("Progress");
-			if (radius != null) radius.set(BlurConfig.radius);
+			if (radius != null) radius.set(BlurConfig.radius * (isReducedBlur(minecraft.screen) ? 0.5F : 1F));
 			if (progress != null) progress.set(blurProgress);
 		}
 		shader.process(0F);
@@ -65,9 +66,9 @@ public final class BlurRenderer extends GuiElement {
 		float scale = (float) Math.sqrt(width * width + height * height) / Math.min(width, height);
 		GL11.glPushMatrix();
 		GL11.glTranslatef(width / 2F, height / 2F, 0F);
-		GL11.glRotatef(BlurConfig.gradientRotation, 0F, 0F, 1F);
+		GL11.glRotatef(rotation(), 0F, 0F, 1F);
 		GL11.glScalef(scale, scale, 1F);
-		GUI.fillGradient(-width / 2, -height / 2, width / 2, height / 2, color(BlurConfig.gradientStart, BlurConfig.gradientStartAlpha), color(BlurConfig.gradientEnd, BlurConfig.gradientEndAlpha));
+		GUI.fillGradient(-width / 2, -height / 2, width / 2, height / 2, color(false), color(true));
 		GL11.glPopMatrix();
 		return true;
 	}
@@ -140,12 +141,36 @@ public final class BlurRenderer extends GuiElement {
 		return !(screen instanceof TitleScreen) || BlurConfig.darkenTitleScreen;
 	}
 
+	public static void renderScreenId() {
+		Minecraft minecraft = Minecraft.getInstance();
+		if (BlurConfig.showScreenID && minecraft.screen != null) {
+			minecraft.textRenderer.drawWithShadow(minecraft.screen.getClass().getName(), 2F, 2F, 0xFF80DFFF);
+		}
+	}
+
+	private static boolean isReducedBlur(Screen screen) {
+		return BlurConfig.reduceInGameBlur && screen instanceof InventoryMenuScreen;
+	}
+
 	private static float interpolate(float start, float end, float progress) {
 		return start + (end - start) * progress;
 	}
 
-	private static int color(String color, int alpha) {
-		int rgb = Integer.parseInt(color.substring(1), 16);
+	private static int color(boolean second) {
+		int alpha = second ? BlurConfig.gradientEndAlpha : BlurConfig.gradientStartAlpha;
+		int rgb;
+		if (BlurConfig.rainbowMode) {
+			float hue = ((System.nanoTime() / 1_000_000_000F) * 0.2F + (second ? 0.35F : 0F)) % 1F;
+			rgb = Color.HSBtoRGB(hue, 1F, 1F) & 0xFFFFFF;
+		} else {
+			String value = second ? BlurConfig.gradientEnd : BlurConfig.gradientStart;
+			rgb = Integer.parseInt(value.substring(1), 16);
+		}
 		return ((int) (alpha * backgroundProgress) << 24) | rgb;
+	}
+
+	private static float rotation() {
+		if (!BlurConfig.rainbowMode) return BlurConfig.gradientRotation;
+		return (BlurConfig.gradientRotation + System.nanoTime() / 50_000_000F) % 360F;
 	}
 }

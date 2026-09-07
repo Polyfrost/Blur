@@ -6,7 +6,8 @@
   "client": [
     "GameRendererMixin",
     "PostChainAccessor",
-    "ScreenMixin"
+    "ScreenMixin",
+    "TitleScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1
