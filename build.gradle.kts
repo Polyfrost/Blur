@@ -33,6 +33,7 @@ dependencies {
 	mappings(ploceus.featherMappings("1"))
 
 	modImplementation("net.fabricmc:fabric-loader:0.19.3")
+	ploceus.dependOsl("0.20.3")
 	modImplementation("com.terraformersmc:modmenu:0.5.0+mc1.8.9")
 }
 
