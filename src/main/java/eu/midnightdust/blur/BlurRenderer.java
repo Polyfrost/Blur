@@ -91,8 +91,8 @@ public final class BlurRenderer extends GuiElement {
 		float elapsed = (System.nanoTime() - transitionStarted) / 1_000_000F;
 		float blurProgressTime = Math.min(elapsed / (blurTarget ? BlurConfig.fadeTimeMillis : BlurConfig.fadeOutTimeMillis), 1F);
 		float backgroundProgressTime = Math.min(elapsed / (backgroundTarget ? BlurConfig.fadeTimeMillis : BlurConfig.fadeOutTimeMillis), 1F);
-		blurProgress = interpolate(blurStart, blurTarget ? 1F : 0F, BlurConfig.blurAnimationCurve.apply(blurProgressTime));
-		backgroundProgress = interpolate(backgroundStart, backgroundTarget ? 1F : 0F, BlurConfig.backgroundAnimationCurve.apply(backgroundProgressTime));
+		blurProgress = interpolate(blurStart, blurTarget ? 1F : 0F, BlurConfig.getBlurAnimationCurve().apply(blurProgressTime));
+		backgroundProgress = interpolate(backgroundStart, backgroundTarget ? 1F : 0F, BlurConfig.getBackgroundAnimationCurve().apply(backgroundProgressTime));
 	}
 
 	private static boolean loadShader(Minecraft minecraft) {
@@ -124,8 +124,8 @@ public final class BlurRenderer extends GuiElement {
 	private static boolean shouldBlur(Screen screen) {
 		if (screen == null) return false;
 		String name = screen.getClass().getName();
-		if (BlurConfig.forceDisabledScreens.contains(name)) return false;
-		if (BlurConfig.forceEnabledScreens.contains(name)) return true;
+		if (BlurConfig.contains(BlurConfig.forceDisabledScreens, name)) return false;
+		if (BlurConfig.contains(BlurConfig.forceEnabledScreens, name)) return true;
 		if (screen instanceof ChatScreen) return false;
 		if (screen instanceof TitleScreen) return BlurConfig.blurTitleScreen;
 		if (screen instanceof DeathScreen) return BlurConfig.blurDeathScreen;

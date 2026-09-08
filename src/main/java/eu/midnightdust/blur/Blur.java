@@ -8,9 +8,11 @@ import org.apache.logging.log4j.Logger;
 public final class Blur implements ClientModInitializer {
 	public static final String MOD_ID = "blur";
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
+	private static final BlurConfig CONFIG = BlurConfig.INSTANCE;
 
 	@Override
 	public void initClient() {
-		MinecraftClientEvents.READY.register(minecraft -> BlurConfig.load());
+		CONFIG.preload();
+		MinecraftClientEvents.READY.register(minecraft -> CONFIG.load());
 	}
 }

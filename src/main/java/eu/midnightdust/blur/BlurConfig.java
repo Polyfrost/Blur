@@ -1,97 +1,131 @@
 package eu.midnightdust.blur;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import net.minecraft.client.Minecraft;
+import org.polyfrost.oneconfig.api.config.v1.Config;
+import org.polyfrost.oneconfig.api.config.v1.annotations.Dropdown;
+import org.polyfrost.oneconfig.api.config.v1.annotations.Include;
+import org.polyfrost.oneconfig.api.config.v1.annotations.Slider;
+import org.polyfrost.oneconfig.api.config.v1.annotations.Switch;
+import org.polyfrost.oneconfig.api.config.v1.annotations.Text;
+import org.polyfrost.oneconfig.api.config.v1.annotations.TextList;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-public final class BlurConfig {
-	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+/** OneConfig presentation and persistence for Blur+'s existing JSON schema. */
+public final class BlurConfig extends Config {
+	private static final String SCREENS = "Screens";
+	private static final String STYLE = "Style";
+	private static final String ANIMATION = "Animation";
+	private static final String ADVANCED = "Advanced";
 
+	public static final BlurConfig INSTANCE = new BlurConfig();
+
+	@Include
 	public static int configVersion = 3;
+
+	@Switch(title = "Blur containers", category = SCREENS)
 	public static boolean blurContainers = true;
+
+	@Switch(title = "Blur books", category = SCREENS)
 	public static boolean blurBooks = true;
+
+	@Switch(title = "Blur signs", category = SCREENS)
 	public static boolean blurSigns = true;
+
+	@Switch(title = "Blur command blocks", category = SCREENS)
 	public static boolean blurCommandBlocks = true;
+
+	@Switch(title = "Blur death screen", category = SCREENS)
 	public static boolean blurDeathScreen = false;
+
+	@Switch(title = "Blur title screen", category = SCREENS)
 	public static boolean blurTitleScreen = false;
+
+	@Switch(title = "Darken title screen", category = SCREENS)
 	public static boolean darkenTitleScreen = false;
+
+	@Switch(title = "Reduce container blur", category = SCREENS)
 	public static boolean reduceInGameBlur = false;
+
+	@Switch(title = "Show screen ID", category = ADVANCED)
 	public static boolean showScreenID = false;
-	public static List<String> forceEnabledScreens = new ArrayList<>(Arrays.asList(
+
+	@TextList(title = "Always blur these screens", category = ADVANCED)
+	public static String[] forceEnabledScreens = {
 		"dev.emi.emi.screen.RecipeScreen",
 		"mezz.jei.gui.recipes.RecipesGui",
 		"me.shedaniel.rei.impl.client.gui.screen.DefaultDisplayViewingScreen"
-	));
-	public static List<String> forceDisabledScreens = new ArrayList<>(Arrays.asList(
+	};
+
+	@TextList(title = "Never blur these screens", category = ADVANCED)
+	public static String[] forceDisabledScreens = {
 		"net.irisshaders.iris.gui.screen.ShaderPackScreen"
-	));
+	};
+
+	@Switch(title = "Use gradient", category = STYLE)
 	public static boolean useGradient = true;
+
+	@Slider(title = "Blur radius", category = STYLE, min = 0, max = 100)
 	public static int radius = 8;
+
+	@Text(title = "Gradient start color", description = "A hexadecimal RGB color, for example #000000.", category = STYLE, regex = "#[0-9a-fA-F]{6}")
 	public static String gradientStart = "#000000";
+
+	@Slider(title = "Gradient start opacity", category = STYLE, min = 0, max = 255)
 	public static int gradientStartAlpha = 75;
+
+	@Text(title = "Gradient end color", description = "A hexadecimal RGB color, for example #000000.", category = STYLE, regex = "#[0-9a-fA-F]{6}")
 	public static String gradientEnd = "#000000";
+
+	@Slider(title = "Gradient end opacity", category = STYLE, min = 0, max = 255)
 	public static int gradientEndAlpha = 75;
+
+	@Slider(title = "Gradient rotation", category = STYLE, min = 0, max = 360)
 	public static int gradientRotation = 0;
+
+	@Switch(title = "Rainbow gradient", category = STYLE)
 	public static boolean rainbowMode = false;
+
+	@Slider(title = "Fade in", description = "Milliseconds until blur and background reach full strength.", category = ANIMATION, min = 1, max = 2000)
 	public static int fadeTimeMillis = 300;
+
+	@Slider(title = "Fade out", description = "Milliseconds until blur and background disappear.", category = ANIMATION, min = 1, max = 2000)
 	public static int fadeOutTimeMillis = 300;
-	public static Easing blurAnimationCurve = Easing.FLAT;
-	public static Easing backgroundAnimationCurve = Easing.FLAT;
+
+	@Dropdown(title = "Blur easing", category = ANIMATION, options = {"FLAT", "SINE", "QUAD", "CUBIC", "QUART", "QUINT", "EXPO", "CIRC", "BACK", "ELASTIC"})
+	public static String blurAnimationCurve = "FLAT";
+
+	@Dropdown(title = "Background easing", category = ANIMATION, options = {"FLAT", "SINE", "QUAD", "CUBIC", "QUART", "QUINT", "EXPO", "CIRC", "BACK", "ELASTIC"})
+	public static String backgroundAnimationCurve = "FLAT";
 
 	private BlurConfig() {
+		super("blur.json", "assets/blur/icon.png", "Blur+", Category.VISUALS);
 	}
 
-	public static void load() {
-		File file = file();
-		if (!file.isFile()) {
-			save();
-			return;
-		}
-
-		try (FileReader reader = new FileReader(file)) {
-			Data data = GSON.fromJson(reader, Data.class);
-			if (data != null) data.apply();
-		} catch (IOException | RuntimeException e) {
-			Blur.LOGGER.warn("Could not read Blur+ configuration", e);
-		}
+	public void load() {
+		preload();
 		boolean migrate = configVersion < 3;
 		normalize();
 		if (migrate) {
 			addForceEnabled("mezz.jei.gui.recipes.RecipesGui");
 			addForceEnabled("me.shedaniel.rei.impl.client.gui.screen.DefaultDisplayViewingScreen");
-			save();
 		}
+		save();
 	}
 
-	public static void save() {
-		File file = file();
-		File parent = file.getParentFile();
-		if (!parent.isDirectory() && !parent.mkdirs()) {
-			Blur.LOGGER.warn("Could not create Blur+ configuration directory");
-			return;
-		}
-
-		try (FileWriter writer = new FileWriter(file)) {
-			GSON.toJson(new Data(), writer);
-		} catch (IOException e) {
-			Blur.LOGGER.warn("Could not save Blur+ configuration", e);
-		}
+	public static Easing getBlurAnimationCurve() {
+		return Easing.parse(blurAnimationCurve);
 	}
 
-	private static File file() {
-		return new File(Minecraft.getInstance().gameDir, "config/blur.json");
+	public static Easing getBackgroundAnimationCurve() {
+		return Easing.parse(backgroundAnimationCurve);
+	}
+
+	public static boolean contains(String[] screens, String screen) {
+		return screens != null && Arrays.asList(screens).contains(screen);
 	}
 
 	private static void normalize() {
-		configVersion = Math.max(configVersion, 3);
+		configVersion = 3;
 		gradientStart = color(gradientStart);
 		gradientEnd = color(gradientEnd);
 		radius = clamp(radius, 0, 100);
@@ -100,18 +134,20 @@ public final class BlurConfig {
 		gradientRotation = clamp(gradientRotation, 0, 360);
 		fadeTimeMillis = clamp(fadeTimeMillis, 1, 2000);
 		fadeOutTimeMillis = clamp(fadeOutTimeMillis, 1, 2000);
-		if (forceEnabledScreens == null) forceEnabledScreens = new ArrayList<>();
-		if (forceDisabledScreens == null) forceDisabledScreens = new ArrayList<>();
-		if (blurAnimationCurve == null) blurAnimationCurve = Easing.FLAT;
-		if (backgroundAnimationCurve == null) backgroundAnimationCurve = Easing.FLAT;
+		if (forceEnabledScreens == null) forceEnabledScreens = new String[0];
+		if (forceDisabledScreens == null) forceDisabledScreens = new String[0];
+		blurAnimationCurve = getBlurAnimationCurve().name();
+		backgroundAnimationCurve = getBackgroundAnimationCurve().name();
+	}
+
+	private static void addForceEnabled(String screen) {
+		if (contains(forceEnabledScreens, screen)) return;
+		forceEnabledScreens = Arrays.copyOf(forceEnabledScreens, forceEnabledScreens.length + 1);
+		forceEnabledScreens[forceEnabledScreens.length - 1] = screen;
 	}
 
 	private static int clamp(int value, int min, int max) {
 		return Math.max(min, Math.min(max, value));
-	}
-
-	private static void addForceEnabled(String screen) {
-		if (!forceEnabledScreens.contains(screen)) forceEnabledScreens.add(screen);
 	}
 
 	private static String color(String value) {
@@ -130,6 +166,14 @@ public final class BlurConfig {
 		BACK,
 		ELASTIC;
 
+		public static Easing parse(String value) {
+			try {
+				return value == null ? FLAT : valueOf(value);
+			} catch (IllegalArgumentException ignored) {
+				return FLAT;
+			}
+		}
+
 		public float apply(float value) {
 			switch (this) {
 				case SINE: return (float) (0.5D - Math.cos(value * Math.PI) / 2D);
@@ -144,60 +188,6 @@ public final class BlurConfig {
 					return value == 0F || value == 1F ? value : (float) (-Math.pow(2D, 10D * value - 10D) * Math.sin((value * 10D - 10.75D) * (2D * Math.PI / 3D)));
 				default: return value;
 			}
-		}
-	}
-
-	private static final class Data {
-		int configVersion = BlurConfig.configVersion;
-		boolean blurContainers = BlurConfig.blurContainers;
-		boolean blurBooks = BlurConfig.blurBooks;
-		boolean blurSigns = BlurConfig.blurSigns;
-		boolean blurCommandBlocks = BlurConfig.blurCommandBlocks;
-		boolean blurDeathScreen = BlurConfig.blurDeathScreen;
-		boolean blurTitleScreen = BlurConfig.blurTitleScreen;
-		boolean darkenTitleScreen = BlurConfig.darkenTitleScreen;
-		boolean reduceInGameBlur = BlurConfig.reduceInGameBlur;
-		boolean showScreenID = BlurConfig.showScreenID;
-		List<String> forceEnabledScreens = new ArrayList<>(BlurConfig.forceEnabledScreens);
-		List<String> forceDisabledScreens = new ArrayList<>(BlurConfig.forceDisabledScreens);
-		boolean useGradient = BlurConfig.useGradient;
-		int radius = BlurConfig.radius;
-		String gradientStart = BlurConfig.gradientStart;
-		int gradientStartAlpha = BlurConfig.gradientStartAlpha;
-		String gradientEnd = BlurConfig.gradientEnd;
-		int gradientEndAlpha = BlurConfig.gradientEndAlpha;
-		int gradientRotation = BlurConfig.gradientRotation;
-		boolean rainbowMode = BlurConfig.rainbowMode;
-		int fadeTimeMillis = BlurConfig.fadeTimeMillis;
-		int fadeOutTimeMillis = BlurConfig.fadeOutTimeMillis;
-		Easing blurAnimationCurve = BlurConfig.blurAnimationCurve;
-		Easing backgroundAnimationCurve = BlurConfig.backgroundAnimationCurve;
-
-		void apply() {
-			BlurConfig.configVersion = configVersion;
-			BlurConfig.blurContainers = blurContainers;
-			BlurConfig.blurBooks = blurBooks;
-			BlurConfig.blurSigns = blurSigns;
-			BlurConfig.blurCommandBlocks = blurCommandBlocks;
-			BlurConfig.blurDeathScreen = blurDeathScreen;
-			BlurConfig.blurTitleScreen = blurTitleScreen;
-			BlurConfig.darkenTitleScreen = darkenTitleScreen;
-			BlurConfig.reduceInGameBlur = reduceInGameBlur;
-			BlurConfig.showScreenID = showScreenID;
-			BlurConfig.forceEnabledScreens = forceEnabledScreens;
-			BlurConfig.forceDisabledScreens = forceDisabledScreens;
-			BlurConfig.useGradient = useGradient;
-			BlurConfig.radius = radius;
-			BlurConfig.gradientStart = gradientStart;
-			BlurConfig.gradientStartAlpha = gradientStartAlpha;
-			BlurConfig.gradientEnd = gradientEnd;
-			BlurConfig.gradientEndAlpha = gradientEndAlpha;
-			BlurConfig.gradientRotation = gradientRotation;
-			BlurConfig.rainbowMode = rainbowMode;
-			BlurConfig.fadeTimeMillis = fadeTimeMillis;
-			BlurConfig.fadeOutTimeMillis = fadeOutTimeMillis;
-			BlurConfig.blurAnimationCurve = blurAnimationCurve;
-			BlurConfig.backgroundAnimationCurve = backgroundAnimationCurve;
 		}
 	}
 }
