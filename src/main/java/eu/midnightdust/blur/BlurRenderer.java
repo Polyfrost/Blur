@@ -39,6 +39,11 @@ public final class BlurRenderer extends GuiElement {
 	}
 
 	public static void render() {
+		if (!BlurConfig.enabled) {
+			disable();
+			return;
+		}
+
 		Minecraft minecraft = Minecraft.getInstance();
 		updateTarget(minecraft.screen);
 		updateProgress();
@@ -59,7 +64,7 @@ public final class BlurRenderer extends GuiElement {
 	}
 
 	public static boolean renderBackground(Screen screen) {
-		if (!backgroundTarget || !BlurConfig.useGradient || backgroundProgress < 0.001F) return false;
+		if (!BlurConfig.enabled || !backgroundTarget || !BlurConfig.useGradient || backgroundProgress < 0.001F) return false;
 
 		int width = screen.width;
 		int height = screen.height;
@@ -119,6 +124,18 @@ public final class BlurRenderer extends GuiElement {
 		shader = null;
 		shaderWidth = 0;
 		shaderHeight = 0;
+	}
+
+	private static void disable() {
+		if (!blurTarget && !backgroundTarget && shader == null && transitionStarted == 0L) return;
+		closeShader();
+		blurTarget = false;
+		backgroundTarget = false;
+		transitionStarted = 0L;
+		blurStart = 0F;
+		backgroundStart = 0F;
+		blurProgress = 0F;
+		backgroundProgress = 0F;
 	}
 
 	private static boolean shouldBlur(Screen screen) {

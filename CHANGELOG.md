@@ -1,3 +1,7 @@
+## Legacy GUI Blur v6.3.3
+
+- Made disabled GUI blur a near-zero-cost render-path early exit.
+
 ## Legacy GUI Blur v6.3.2
 
 - Added a master **Enable GUI blur** switch to the OneConfig screen.
