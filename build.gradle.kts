@@ -9,7 +9,7 @@ plugins {
 
 group = "eu.midnightdust.blur"
 version = "6.3.1+mc1.8.9-ornithe"
-base.archivesName = "BlurPlus"
+base.archivesName = "LegacyGuiBlur"
 
 repositories {
 	maven("https://moehreag.duckdns.org/maven/releases")

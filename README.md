@@ -1,6 +1,6 @@
-# Blur+ for Ornithe 1.8.9
+# Legacy GUI Blur for Ornithe 1.8.9
 
-Blur+ adds configurable blur, gradients, and fade animations behind Minecraft screens.
+Legacy GUI Blur adds configurable blur, gradients, and fade animations behind Minecraft screens.
 
 ![Image showing the Minecraft inventory with a blur effect in the background](https://cdn.modrinth.com/data/NK39zBp2/images/213f18fcf3d6c55cad164077d569e2f0339551da.webp)
 

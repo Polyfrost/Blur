@@ -108,7 +108,7 @@ public final class BlurRenderer extends GuiElement {
 			shaderHeight = minecraft.height;
 			return true;
 		} catch (IOException | RuntimeException e) {
-			Blur.LOGGER.warn("Could not load Blur+ shader", e);
+			Blur.LOGGER.warn("Could not load Legacy GUI Blur shader", e);
 			closeShader();
 			return false;
 		}

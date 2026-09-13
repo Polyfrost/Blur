@@ -98,7 +98,7 @@ public final class BlurConfig extends Config {
 	public static String backgroundAnimationCurve = "FLAT";
 
 	private BlurConfig() {
-		super("blur.json", "assets/blur/icon.png", "Blur+", Category.VISUALS);
+		super("blur.json", "assets/blur/icon.png", "Legacy GUI Blur", Category.VISUALS);
 	}
 
 	public void load() {

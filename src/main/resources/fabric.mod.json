@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "id": "blur",
   "version": "${version}",
-  "name": "Blur+",
-  "description": "Various enhancements for the blur effect behind Minecraft GUIs",
+  "name": "Legacy GUI Blur",
+  "description": "Configurable blur, gradients, and fade animations behind Minecraft GUIs",
   "authors": ["Motschen", "amiralimollaei", "tterrag1098", "Pyrofab"],
   "contact": {
-    "homepage": "https://modrinth.com/mod/blur-plus",
-    "sources": "https://github.com/Motschen/Blur",
-    "issues": "https://github.com/Motschen/Blur/issues"
+    "homepage": "https://github.com/Polyfrost/Blur",
+    "sources": "https://github.com/Polyfrost/Blur",
+    "issues": "https://github.com/Polyfrost/Blur/issues"
   },
   "license": "MIT",
   "icon": "assets/blur/icon.png",
