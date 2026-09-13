@@ -1,4 +1,4 @@
-# Legacy GUI Blur for Ornithe 1.8.9
+# Legacy GUI Blur for Fabric 1.8.9
 
 Legacy GUI Blur adds configurable blur, gradients, and fade animations behind Minecraft screens.
 

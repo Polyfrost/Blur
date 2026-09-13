@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "eu.midnightdust.blur"
-version = "6.3.1+mc1.8.9-ornithe"
+version = "6.3.1+mc1.8.9-fabric"
 base.archivesName = "LegacyGuiBlur"
 
 repositories {
@@ -27,7 +27,7 @@ val oneConfigCompileDirectory = oneConfigDirectory.map { it.dir("compile") }
 
 val downloadOneConfig = tasks.register("downloadOneConfig") {
 	group = "setup"
-	description = "Downloads the verified OneConfig Ornithe 1.8.9 CI artifact using GitHub CLI."
+	description = "Downloads the verified OneConfig Fabric (Ornithe) 1.8.9 CI artifact using GitHub CLI."
 	inputs.property("oneConfigCommit", oneConfigCommit)
 	inputs.property("oneConfigWorkflowRun", oneConfigWorkflowRun)
 	inputs.property("oneConfigArtifact", oneConfigArtifact)
@@ -69,7 +69,7 @@ val downloadOneConfig = tasks.register("downloadOneConfig") {
 				eachFile { path = bootstrap.name }
 				includeEmptyDirs = false
 			}
-			check(bootstrap.isFile) { "OneConfig 1.8.9 Ornithe bootstrap JAR was not found in the verified artifact" }
+			check(bootstrap.isFile) { "OneConfig 1.8.9 Fabric (Ornithe) bootstrap JAR was not found in the verified artifact" }
 		}
 
 		if (!compileDirectory.isDirectory || compileDirectory.listFiles().isNullOrEmpty()) {
