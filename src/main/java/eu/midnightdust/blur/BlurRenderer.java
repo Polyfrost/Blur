@@ -122,7 +122,7 @@ public final class BlurRenderer extends GuiElement {
 	}
 
 	private static boolean shouldBlur(Screen screen) {
-		if (screen == null) return false;
+		if (!BlurConfig.enabled || screen == null) return false;
 		String name = screen.getClass().getName();
 		if (BlurConfig.contains(BlurConfig.forceDisabledScreens, name)) return false;
 		if (BlurConfig.contains(BlurConfig.forceEnabledScreens, name)) return true;

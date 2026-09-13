@@ -12,6 +12,7 @@ import java.util.Arrays;
 
 /** OneConfig presentation and persistence for Blur+'s existing JSON schema. */
 public final class BlurConfig extends Config {
+	private static final String GENERAL = "General";
 	private static final String SCREENS = "Screens";
 	private static final String STYLE = "Style";
 	private static final String ANIMATION = "Animation";
@@ -21,6 +22,9 @@ public final class BlurConfig extends Config {
 
 	@Include
 	public static int configVersion = 3;
+
+	@Switch(title = "Enable GUI blur", description = "Disables blur on every screen without changing the individual screen settings.", category = GENERAL)
+	public static boolean enabled = true;
 
 	@Switch(title = "Blur containers", category = SCREENS)
 	public static boolean blurContainers = true;

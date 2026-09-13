@@ -1,3 +1,7 @@
+## Legacy GUI Blur v6.3.2
+
+- Added a master **Enable GUI blur** switch to the OneConfig screen.
+
 ## Legacy GUI Blur v6.3.1
 Thanks a bunch to [@amiralimollaei](https://github.com/amiralimollaei) for submitting the following change in [#164](https://github.com/Motschen/Blur/pull/164):
 - Fix crash in nested screens (such as the new friends menu) 
