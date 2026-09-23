@@ -64,7 +64,15 @@ public final class BlurRenderer extends GuiElement {
 	}
 
 	public static boolean renderBackground(Screen screen) {
-		if (!BlurConfig.enabled || !backgroundTarget || !BlurConfig.useGradient || backgroundProgress < 0.001F) return false;
+		if (!BlurConfig.enabled) return false;
+		// render() skips menus without a world
+		if (screen == Minecraft.getInstance().screen) {
+			updateTarget(screen);
+			updateProgress();
+		}
+		if (!backgroundTarget || !BlurConfig.useGradient) return false;
+		// Hide vanilla background before the fade shows
+		if (backgroundProgress < 0.001F) return true;
 
 		int width = screen.width;
 		int height = screen.height;
@@ -143,6 +151,8 @@ public final class BlurRenderer extends GuiElement {
 		String name = screen.getClass().getName();
 		if (BlurConfig.contains(BlurConfig.forceDisabledScreens, name)) return false;
 		if (BlurConfig.contains(BlurConfig.forceEnabledScreens, name)) return true;
+		// No world to blur, keep dirt
+		if (Minecraft.getInstance().world == null && !(screen instanceof TitleScreen)) return false;
 		if (screen instanceof ChatScreen) return false;
 		if (screen instanceof TitleScreen) return BlurConfig.blurTitleScreen;
 		if (screen instanceof DeathScreen) return BlurConfig.blurDeathScreen;
