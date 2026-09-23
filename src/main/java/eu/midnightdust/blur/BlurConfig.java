@@ -18,10 +18,12 @@ public final class BlurConfig extends Config {
 	private static final String ANIMATION = "Animation";
 	private static final String ADVANCED = "Advanced";
 
+	private static final String ONECONFIG_SCREEN = "org.polyfrost.oneconfig.internal.ui.compose.impls.OneConfigUIScreen";
+
 	public static final BlurConfig INSTANCE = new BlurConfig();
 
 	@Include
-	public static int configVersion = 3;
+	public static int configVersion = 4;
 
 	@Switch(title = "Enable GUI blur", description = "Disables blur on every screen without changing the individual screen settings.", category = GENERAL)
 	public static boolean enabled = true;
@@ -62,7 +64,8 @@ public final class BlurConfig extends Config {
 
 	@TextList(title = "Never blur these screens", category = ADVANCED)
 	public static String[] forceDisabledScreens = {
-		"net.irisshaders.iris.gui.screen.ShaderPackScreen"
+		"net.irisshaders.iris.gui.screen.ShaderPackScreen",
+		ONECONFIG_SCREEN
 	};
 
 	@Switch(title = "Use gradient", category = STYLE)
@@ -107,11 +110,14 @@ public final class BlurConfig extends Config {
 
 	public void load() {
 		preload();
-		boolean migrate = configVersion < 3;
+		int previousVersion = configVersion;
 		normalize();
-		if (migrate) {
-			addForceEnabled("mezz.jei.gui.recipes.RecipesGui");
-			addForceEnabled("me.shedaniel.rei.impl.client.gui.screen.DefaultDisplayViewingScreen");
+		if (previousVersion < 3) {
+			forceEnabledScreens = add(forceEnabledScreens, "mezz.jei.gui.recipes.RecipesGui");
+			forceEnabledScreens = add(forceEnabledScreens, "me.shedaniel.rei.impl.client.gui.screen.DefaultDisplayViewingScreen");
+		}
+		if (previousVersion < 4) {
+			forceDisabledScreens = add(forceDisabledScreens, ONECONFIG_SCREEN);
 		}
 		save();
 	}
@@ -129,7 +135,7 @@ public final class BlurConfig extends Config {
 	}
 
 	private static void normalize() {
-		configVersion = 3;
+		configVersion = 4;
 		gradientStart = color(gradientStart);
 		gradientEnd = color(gradientEnd);
 		radius = clamp(radius, 0, 100);
@@ -144,10 +150,11 @@ public final class BlurConfig extends Config {
 		backgroundAnimationCurve = getBackgroundAnimationCurve().name();
 	}
 
-	private static void addForceEnabled(String screen) {
-		if (contains(forceEnabledScreens, screen)) return;
-		forceEnabledScreens = Arrays.copyOf(forceEnabledScreens, forceEnabledScreens.length + 1);
-		forceEnabledScreens[forceEnabledScreens.length - 1] = screen;
+	private static String[] add(String[] screens, String screen) {
+		if (contains(screens, screen)) return screens;
+		String[] result = Arrays.copyOf(screens, screens.length + 1);
+		result[screens.length] = screen;
+		return result;
 	}
 
 	private static int clamp(int value, int min, int max) {
