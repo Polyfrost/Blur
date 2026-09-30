@@ -1,11 +1,12 @@
 package eu.midnightdust.blur;
 
+import org.polyfrost.compose.render.PolyColor;
 import org.polyfrost.oneconfig.api.config.v1.Config;
+import org.polyfrost.oneconfig.api.config.v1.annotations.Color;
 import org.polyfrost.oneconfig.api.config.v1.annotations.Dropdown;
 import org.polyfrost.oneconfig.api.config.v1.annotations.Include;
 import org.polyfrost.oneconfig.api.config.v1.annotations.Slider;
 import org.polyfrost.oneconfig.api.config.v1.annotations.Switch;
-import org.polyfrost.oneconfig.api.config.v1.annotations.Text;
 import org.polyfrost.oneconfig.api.config.v1.annotations.TextList;
 
 import java.util.Arrays;
@@ -74,23 +75,14 @@ public final class BlurConfig extends Config {
 	@Slider(title = "Blur radius", category = STYLE, min = 0, max = 100)
 	public static int radius = 8;
 
-	@Text(title = "Gradient start color", description = "A hexadecimal RGB color, for example #000000.", category = STYLE, regex = "#[0-9a-fA-F]{6}")
-	public static String gradientStart = "#000000";
+	@Color(title = "Gradient start color", category = STYLE, alpha = true)
+	public static PolyColor gradientStartColor = new PolyColor(75 << 24);
 
-	@Slider(title = "Gradient start opacity", category = STYLE, min = 0, max = 255)
-	public static int gradientStartAlpha = 75;
-
-	@Text(title = "Gradient end color", description = "A hexadecimal RGB color, for example #000000.", category = STYLE, regex = "#[0-9a-fA-F]{6}")
-	public static String gradientEnd = "#000000";
-
-	@Slider(title = "Gradient end opacity", category = STYLE, min = 0, max = 255)
-	public static int gradientEndAlpha = 75;
+	@Color(title = "Gradient end color", category = STYLE, alpha = true)
+	public static PolyColor gradientEndColor = new PolyColor(75 << 24);
 
 	@Slider(title = "Gradient rotation", category = STYLE, min = 0, max = 360)
 	public static int gradientRotation = 0;
-
-	@Switch(title = "Rainbow gradient", category = STYLE)
-	public static boolean rainbowMode = false;
 
 	@Slider(title = "Fade in", description = "Milliseconds until blur and background reach full strength.", category = ANIMATION, min = 1, max = 2000)
 	public static int fadeTimeMillis = 300;
@@ -98,18 +90,17 @@ public final class BlurConfig extends Config {
 	@Slider(title = "Fade out", description = "Milliseconds until blur and background disappear.", category = ANIMATION, min = 1, max = 2000)
 	public static int fadeOutTimeMillis = 300;
 
-	@Dropdown(title = "Blur easing", category = ANIMATION, options = {"FLAT", "SINE", "QUAD", "CUBIC", "QUART", "QUINT", "EXPO", "CIRC", "BACK", "ELASTIC"})
-	public static String blurAnimationCurve = "FLAT";
+	@Dropdown(title = "Blur easing", category = ANIMATION, options = {"Flat", "Sine", "Quad", "Cubic", "Quart", "Quint", "Expo", "Circ", "Back", "Elastic"})
+	public static Easing blurAnimationCurve = Easing.FLAT;
 
-	@Dropdown(title = "Background easing", category = ANIMATION, options = {"FLAT", "SINE", "QUAD", "CUBIC", "QUART", "QUINT", "EXPO", "CIRC", "BACK", "ELASTIC"})
-	public static String backgroundAnimationCurve = "FLAT";
+	@Dropdown(title = "Background easing", category = ANIMATION, options = {"Flat", "Sine", "Quad", "Cubic", "Quart", "Quint", "Expo", "Circ", "Back", "Elastic"})
+	public static Easing backgroundAnimationCurve = Easing.FLAT;
 
 	private BlurConfig() {
 		super("blur.json", "assets/blur/icon.png", "Legacy GUI Blur", Category.VISUALS);
 	}
 
 	public void load() {
-		preload();
 		int previousVersion = configVersion;
 		normalize();
 		if (previousVersion < 3) {
@@ -122,32 +113,22 @@ public final class BlurConfig extends Config {
 		save();
 	}
 
-	public static Easing getBlurAnimationCurve() {
-		return Easing.parse(blurAnimationCurve);
-	}
-
-	public static Easing getBackgroundAnimationCurve() {
-		return Easing.parse(backgroundAnimationCurve);
-	}
-
 	public static boolean contains(String[] screens, String screen) {
 		return screens != null && Arrays.asList(screens).contains(screen);
 	}
 
 	private static void normalize() {
 		configVersion = 4;
-		gradientStart = color(gradientStart);
-		gradientEnd = color(gradientEnd);
+		if (gradientStartColor == null) gradientStartColor = new PolyColor(75 << 24);
+		if (gradientEndColor == null) gradientEndColor = new PolyColor(75 << 24);
 		radius = clamp(radius, 0, 100);
-		gradientStartAlpha = clamp(gradientStartAlpha, 0, 255);
-		gradientEndAlpha = clamp(gradientEndAlpha, 0, 255);
 		gradientRotation = clamp(gradientRotation, 0, 360);
 		fadeTimeMillis = clamp(fadeTimeMillis, 1, 2000);
 		fadeOutTimeMillis = clamp(fadeOutTimeMillis, 1, 2000);
 		if (forceEnabledScreens == null) forceEnabledScreens = new String[0];
 		if (forceDisabledScreens == null) forceDisabledScreens = new String[0];
-		blurAnimationCurve = getBlurAnimationCurve().name();
-		backgroundAnimationCurve = getBackgroundAnimationCurve().name();
+		if (blurAnimationCurve == null) blurAnimationCurve = Easing.FLAT;
+		if (backgroundAnimationCurve == null) backgroundAnimationCurve = Easing.FLAT;
 	}
 
 	private static String[] add(String[] screens, String screen) {
@@ -161,10 +142,6 @@ public final class BlurConfig extends Config {
 		return Math.max(min, Math.min(max, value));
 	}
 
-	private static String color(String value) {
-		return value != null && value.matches("#[0-9a-fA-F]{6}") ? value : "#000000";
-	}
-
 	public enum Easing {
 		FLAT,
 		SINE,
@@ -176,14 +153,6 @@ public final class BlurConfig extends Config {
 		CIRC,
 		BACK,
 		ELASTIC;
-
-		public static Easing parse(String value) {
-			try {
-				return value == null ? FLAT : valueOf(value);
-			} catch (IllegalArgumentException ignored) {
-				return FLAT;
-			}
-		}
 
 		public float apply(float value) {
 			switch (this) {
