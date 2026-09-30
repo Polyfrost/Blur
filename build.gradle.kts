@@ -13,7 +13,11 @@ val oneConfigVersion = "1.2.3"
 repositories {
 	maven("https://moehreag.duckdns.org/maven/releases")
 	maven("https://repo.polyfrost.org/releases")
+	maven("https://maven.cloverclient.com/releases") {
+		content { includeGroup("pl.tomgirl") }
+	}
 	mavenCentral()
+	google()
 }
 
 ploceus {
@@ -38,14 +42,9 @@ dependencies {
 	modImplementation("net.fabricmc:fabric-loader:0.19.3")
 	ploceus.dependOsl("0.20.3")
 	modImplementation("com.terraformersmc:modmenu:0.5.0+mc1.8.9")
-	// OneConfig publishes Java 21 variant metadata; the bytecode itself is fine on the 17 classpath.
-	listOf("config", "config-impl").forEach { module ->
-		components.withModule("org.polyfrost.oneconfig:$module") {
-			allVariants {
-				attributes { attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 17) }
-			}
-		}
-		compileOnly("org.polyfrost.oneconfig:$module:$oneConfigVersion") { isTransitive = false }
+	modImplementation("org.polyfrost.oneconfig:1.8.9-ornithe:$oneConfigVersion")
+	for (module in arrayOf("commands", "config", "config-impl", "events", "internal", "ui", "utils", "hud")) {
+		implementation("org.polyfrost.oneconfig:$module:$oneConfigVersion")
 	}
 }
 
@@ -58,11 +57,11 @@ tasks.processResources {
 
 tasks.withType<JavaCompile>().configureEach {
 	options.encoding = "UTF-8"
-	options.release = 17
+	options.release = 25
 }
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
 	withSourcesJar()
 }
