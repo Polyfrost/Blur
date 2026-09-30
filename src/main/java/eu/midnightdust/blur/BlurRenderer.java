@@ -17,7 +17,6 @@ import net.minecraft.client.render.shaders.Uniform;
 import net.minecraft.resource.Identifier;
 import org.lwjgl.opengl.GL11;
 
-import java.awt.Color;
 import java.io.IOException;
 
 public final class BlurRenderer extends GuiElement {
@@ -79,7 +78,7 @@ public final class BlurRenderer extends GuiElement {
 		float scale = (float) Math.sqrt(width * width + height * height) / Math.min(width, height);
 		GL11.glPushMatrix();
 		GL11.glTranslatef(width / 2F, height / 2F, 0F);
-		GL11.glRotatef(rotation(), 0F, 0F, 1F);
+		GL11.glRotatef(BlurConfig.gradientRotation, 0F, 0F, 1F);
 		GL11.glScalef(scale, scale, 1F);
 		GUI.fillGradient(-width / 2, -height / 2, width / 2, height / 2, color(false), color(true));
 		GL11.glPopMatrix();
@@ -104,8 +103,8 @@ public final class BlurRenderer extends GuiElement {
 		float elapsed = (System.nanoTime() - transitionStarted) / 1_000_000F;
 		float blurProgressTime = Math.min(elapsed / (blurTarget ? BlurConfig.fadeTimeMillis : BlurConfig.fadeOutTimeMillis), 1F);
 		float backgroundProgressTime = Math.min(elapsed / (backgroundTarget ? BlurConfig.fadeTimeMillis : BlurConfig.fadeOutTimeMillis), 1F);
-		blurProgress = interpolate(blurStart, blurTarget ? 1F : 0F, BlurConfig.getBlurAnimationCurve().apply(blurProgressTime));
-		backgroundProgress = interpolate(backgroundStart, backgroundTarget ? 1F : 0F, BlurConfig.getBackgroundAnimationCurve().apply(backgroundProgressTime));
+		blurProgress = interpolate(blurStart, blurTarget ? 1F : 0F, BlurConfig.blurAnimationCurve.apply(blurProgressTime));
+		backgroundProgress = interpolate(backgroundStart, backgroundTarget ? 1F : 0F, BlurConfig.backgroundAnimationCurve.apply(backgroundProgressTime));
 	}
 
 	private static boolean loadShader(Minecraft minecraft) {
@@ -184,20 +183,8 @@ public final class BlurRenderer extends GuiElement {
 	}
 
 	private static int color(boolean second) {
-		int alpha = second ? BlurConfig.gradientEndAlpha : BlurConfig.gradientStartAlpha;
-		int rgb;
-		if (BlurConfig.rainbowMode) {
-			float hue = ((System.nanoTime() / 1_000_000_000F) * 0.2F + (second ? 0.35F : 0F)) % 1F;
-			rgb = Color.HSBtoRGB(hue, 1F, 1F) & 0xFFFFFF;
-		} else {
-			String value = second ? BlurConfig.gradientEnd : BlurConfig.gradientStart;
-			rgb = Integer.parseInt(value.substring(1), 16);
-		}
-		return ((int) (alpha * backgroundProgress) << 24) | rgb;
-	}
-
-	private static float rotation() {
-		if (!BlurConfig.rainbowMode) return BlurConfig.gradientRotation;
-		return (BlurConfig.gradientRotation + System.nanoTime() / 50_000_000F) % 360F;
+		int argb = (second ? BlurConfig.gradientEndColor : BlurConfig.gradientStartColor).getArgb();
+		int alpha = Math.max(0, Math.min(255, (int) ((argb >>> 24) * backgroundProgress)));
+		return alpha << 24 | argb & 0xFFFFFF;
 	}
 }
