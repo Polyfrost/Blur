@@ -1,3 +1,9 @@
+## Legacy GUI Blur v6.3.4
+
+- Use OneConfig config system properly.
+- Exclude OneConfig screens from blur.
+- Fix flicker on open; don't blur outside worlds.
+
 ## Legacy GUI Blur v6.3.3
 
 - Made disabled GUI blur a near-zero-cost render-path early exit.

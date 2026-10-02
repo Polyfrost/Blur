@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "eu.midnightdust.blur"
-version = "6.3.3+mc1.8.9-fabric"
+version = "6.3.4+mc1.8.9-fabric"
 base.archivesName = "LegacyGuiBlur"
 
 val oneConfigVersion = "1.2.3"
