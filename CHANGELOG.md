@@ -1,3 +1,7 @@
+## Legacy GUI Blur v6.3.5
+
+- Significantly improve blur shader performance based on modern MC versions
+
 ## Legacy GUI Blur v6.3.4
 
 - Use OneConfig config system properly.
