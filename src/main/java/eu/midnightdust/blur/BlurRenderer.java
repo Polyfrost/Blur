@@ -13,19 +13,24 @@ import net.minecraft.client.gui.screen.inventory.menu.InventoryMenuScreen;
 import net.minecraft.client.gui.screen.inventory.menu.SignEditScreen;
 import net.minecraft.client.render.PostChain;
 import net.minecraft.client.render.PostPass;
+import net.minecraft.client.render.pipeline.RenderTarget;
 import net.minecraft.client.render.shaders.Uniform;
 import net.minecraft.resource.Identifier;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Matrix4f;
 
 import java.io.IOException;
 
 public final class BlurRenderer extends GuiElement {
 	private static final Identifier SHADER = new Identifier(Blur.MOD_ID, "shaders/post/fade_in_blur.json");
+	private static final String BLUR_PROGRAM = "fade_in_blur";
+	private static final String COPY_PROGRAM = "fade_in_blur_copy";
 	private static final BlurRenderer GUI = new BlurRenderer();
 
 	private static PostChain shader;
 	private static int shaderWidth;
 	private static int shaderHeight;
+	private static int shaderScale;
 	private static boolean blurTarget;
 	private static boolean backgroundTarget;
 	private static long transitionStarted;
@@ -52,14 +57,26 @@ public final class BlurRenderer extends GuiElement {
 			return;
 		}
 
-		if (!loadShader(minecraft)) return;
+		float blurRadius = BlurConfig.radius * (isReducedBlur(minecraft.screen) ? 0.5F : 1F);
+		int scale = downscaleFor(blurRadius);
+		if (!loadShader(minecraft, scale)) return;
 		for (PostPass pass : ((PostChainAccessor) shader).blur$getPasses()) {
 			Uniform radius = pass.getEffect().getUniform("Radius");
 			Uniform progress = pass.getEffect().getUniform("Progress");
-			if (radius != null) radius.set(BlurConfig.radius * (isReducedBlur(minecraft.screen) ? 0.5F : 1F));
+			if (radius != null) radius.set(blurRadius / scale);
 			if (progress != null) progress.set(blurProgress);
 		}
+		RenderTarget main = minecraft.getRenderTarget();
+		int filterMode = main.filterMode;
+		main.setFilterMode(GL11.GL_LINEAR);
 		shader.process(0F);
+		main.setFilterMode(filterMode);
+	}
+
+	private static int downscaleFor(float radius) {
+		if (radius >= 16F) return 4;
+		if (radius >= 6F) return 2;
+		return 1;
 	}
 
 	public static boolean renderBackground(Screen screen) {
@@ -107,17 +124,19 @@ public final class BlurRenderer extends GuiElement {
 		backgroundProgress = interpolate(backgroundStart, backgroundTarget ? 1F : 0F, BlurConfig.backgroundAnimationCurve.apply(backgroundProgressTime));
 	}
 
-	private static boolean loadShader(Minecraft minecraft) {
-		if (shader != null && (shaderWidth != minecraft.width || shaderHeight != minecraft.height)) {
+	private static boolean loadShader(Minecraft minecraft, int scale) {
+		RenderTarget main = minecraft.getRenderTarget();
+		if (shader != null && (shaderWidth != main.width || shaderHeight != main.height || shaderScale != scale)) {
 			closeShader();
 		}
 		if (shader != null) return true;
 
 		try {
-			shader = new PostChain(minecraft.getTextureManager(), minecraft.getResourceManager(), minecraft.getRenderTarget(), SHADER);
-			shader.resize(minecraft.width, minecraft.height);
-			shaderWidth = minecraft.width;
-			shaderHeight = minecraft.height;
+			shader = new PostChain(minecraft.getTextureManager(), minecraft.getResourceManager(), main, SHADER);
+			buildPasses(main, scale);
+			shaderWidth = main.width;
+			shaderHeight = main.height;
+			shaderScale = scale;
 			return true;
 		} catch (IOException | RuntimeException e) {
 			Blur.LOGGER.warn("Could not load Legacy GUI Blur shader", e);
@@ -126,11 +145,53 @@ public final class BlurRenderer extends GuiElement {
 		}
 	}
 
+	private static void buildPasses(RenderTarget main, int scale) throws IOException {
+		RenderTarget low = main;
+		for (int step = 2; step <= scale; step *= 2) {
+			RenderTarget next = addTarget("down" + step, Math.max(1, main.width / step), Math.max(1, main.height / step));
+			addPass(COPY_PROGRAM, low, next);
+			low = next;
+		}
+		RenderTarget swap = addTarget("swap", low.width, low.height);
+		for (int i = 0; i < 2; i++) {
+			addPass(BLUR_PROGRAM, low, swap).getEffect().getUniform("BlurDir").set(1F, 0F);
+			addPass(BLUR_PROGRAM, swap, low).getEffect().getUniform("BlurDir").set(0F, 1F);
+		}
+		if (low != main) addPass(COPY_PROGRAM, low, main);
+	}
+
+	private static RenderTarget addTarget(String name, int width, int height) {
+		shader.addTempTarget(name, width, height);
+		RenderTarget target = ((PostChainAccessor) shader).blur$getTargets().get(name);
+		target.setFilterMode(GL11.GL_LINEAR);
+		return target;
+	}
+
+	private static PostPass addPass(String program, RenderTarget in, RenderTarget out) throws IOException {
+		PostPass pass = shader.addPass(program, in, out);
+		pass.setOrthoMatrix(orthoMatrix(out));
+		return pass;
+	}
+
+	private static Matrix4f orthoMatrix(RenderTarget target) {
+		Matrix4f matrix = new Matrix4f();
+		matrix.setIdentity();
+		matrix.m00 = 2F / target.width;
+		matrix.m11 = 2F / -target.height;
+		matrix.m22 = -0.0020001999F;
+		matrix.m33 = 1F;
+		matrix.m03 = -1F;
+		matrix.m13 = 1F;
+		matrix.m23 = -1.0001999F;
+		return matrix;
+	}
+
 	private static void closeShader() {
 		if (shader != null) shader.close();
 		shader = null;
 		shaderWidth = 0;
 		shaderHeight = 0;
+		shaderScale = 0;
 	}
 
 	private static void disable() {
