@@ -19,8 +19,6 @@ public final class BlurConfig extends Config {
 	private static final String ANIMATION = "Animation";
 	private static final String ADVANCED = "Advanced";
 
-	private static final String ONECONFIG_SCREEN = "org.polyfrost.oneconfig.internal.ui.compose.impls.OneConfigUIScreen";
-
 	public static final BlurConfig INSTANCE = new BlurConfig();
 
 	@Include
@@ -65,8 +63,7 @@ public final class BlurConfig extends Config {
 
 	@TextList(title = "Never blur these screens", category = ADVANCED)
 	public static String[] forceDisabledScreens = {
-		"net.irisshaders.iris.gui.screen.ShaderPackScreen",
-		ONECONFIG_SCREEN
+		"net.irisshaders.iris.gui.screen.ShaderPackScreen"
 	};
 
 	@Switch(title = "Use gradient", category = STYLE)
@@ -106,9 +103,6 @@ public final class BlurConfig extends Config {
 		if (previousVersion < 3) {
 			forceEnabledScreens = add(forceEnabledScreens, "mezz.jei.gui.recipes.RecipesGui");
 			forceEnabledScreens = add(forceEnabledScreens, "me.shedaniel.rei.impl.client.gui.screen.DefaultDisplayViewingScreen");
-		}
-		if (previousVersion < 4) {
-			forceDisabledScreens = add(forceDisabledScreens, ONECONFIG_SCREEN);
 		}
 		save();
 	}

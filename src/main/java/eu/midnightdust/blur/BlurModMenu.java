@@ -3,7 +3,9 @@ package eu.midnightdust.blur;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import net.fabricmc.loader.api.FabricLoader;
-import org.polyfrost.oneconfig.internal.ui.compose.impls.OneConfigUIScreen;
+import net.minecraft.client.gui.screen.Screen;
+import org.polyfrost.oneconfig.api.ui.v1.OneConfigUI;
+import org.polyfrost.oneconfig.api.ui.v1.page.OneConfigPages;
 
 public final class BlurModMenu implements ModMenuApi {
 	@Override
@@ -11,6 +13,6 @@ public final class BlurModMenu implements ModMenuApi {
 		// Without Mod Menu the OneConfig compat layer still collects this factory
 		// and would register a duplicate entry next to the native config
 		if (!FabricLoader.getInstance().isModLoaded("modmenu")) return null;
-		return parent -> new OneConfigUIScreen(BlurConfig.INSTANCE.id);
+		return parent -> (Screen) OneConfigUI.createScreen(OneConfigPages.modConfig(BlurConfig.INSTANCE.id));
 	}
 }

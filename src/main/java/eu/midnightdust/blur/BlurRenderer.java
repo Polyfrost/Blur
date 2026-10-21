@@ -18,6 +18,7 @@ import net.minecraft.client.render.shaders.Uniform;
 import net.minecraft.resource.Identifier;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
+import org.polyfrost.oneconfig.api.ui.v1.OneConfigUI;
 
 import java.io.IOException;
 
@@ -211,6 +212,7 @@ public final class BlurRenderer extends GuiElement {
 		String name = screen.getClass().getName();
 		if (BlurConfig.contains(BlurConfig.forceDisabledScreens, name)) return false;
 		if (BlurConfig.contains(BlurConfig.forceEnabledScreens, name)) return true;
+		if (OneConfigUI.isOneConfigScreen(screen)) return false;
 		// No world to blur, keep dirt
 		if (Minecraft.getInstance().world == null && !(screen instanceof TitleScreen)) return false;
 		if (screen instanceof ChatScreen) return false;
