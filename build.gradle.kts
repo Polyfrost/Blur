@@ -8,11 +8,15 @@ group = "eu.midnightdust.blur"
 version = "6.3.5+mc1.8.9-fabric"
 base.archivesName = "LegacyGuiBlur"
 
-val oneConfigVersion = "1.2.3"
+val oneConfigVersion = "1.5.0"
 
 repositories {
+	mavenLocal()
 	maven("https://moehreag.duckdns.org/maven/releases")
 	maven("https://repo.polyfrost.org/releases")
+	maven("https://maven.pkg.jetbrains.space/public/p/compose/dev") {
+		content { includeGroup("org.jetbrains.skiko") }
+	}
 	maven("https://maven.cloverclient.com/releases") {
 		content { includeGroup("pl.tomgirl") }
 	}
