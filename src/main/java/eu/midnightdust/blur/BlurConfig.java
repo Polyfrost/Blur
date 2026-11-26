@@ -1,7 +1,11 @@
 package eu.midnightdust.blur;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.polyfrost.compose.render.PolyColor;
 import org.polyfrost.oneconfig.api.config.v1.Config;
+import org.polyfrost.oneconfig.api.config.v1.ConfigManager;
 import org.polyfrost.oneconfig.api.config.v1.annotations.Color;
 import org.polyfrost.oneconfig.api.config.v1.annotations.Dropdown;
 import org.polyfrost.oneconfig.api.config.v1.annotations.Include;
@@ -9,6 +13,11 @@ import org.polyfrost.oneconfig.api.config.v1.annotations.Slider;
 import org.polyfrost.oneconfig.api.config.v1.annotations.Switch;
 import org.polyfrost.oneconfig.api.config.v1.annotations.TextList;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 /** OneConfig presentation and persistence for Blur+'s existing JSON schema. */
@@ -18,6 +27,9 @@ public final class BlurConfig extends Config {
 	private static final String STYLE = "Style";
 	private static final String ANIMATION = "Animation";
 	private static final String ADVANCED = "Advanced";
+
+	private static final String FILE = "legacyguiblur.json";
+	private static final String SHARED_FILE = "blur.json";
 
 	public static final BlurConfig INSTANCE = new BlurConfig();
 
@@ -94,7 +106,35 @@ public final class BlurConfig extends Config {
 	public static Easing backgroundAnimationCurve = Easing.FLAT;
 
 	private BlurConfig() {
-		super("blur.json", "assets/blur/icon.png", "Legacy GUI Blur", Category.VISUALS);
+		super(FILE, "assets/blur/icon.png", "Legacy GUI Blur", Category.VISUALS);
+	}
+
+	@Override
+	protected void initialize(boolean byConfigManager) {
+		importSharedFile(ConfigManager.active().getFolder());
+		super.initialize(byConfigManager);
+	}
+
+	private static void importSharedFile(Path folder) {
+		Path target = folder.resolve(FILE);
+		Path source = folder.resolve(SHARED_FILE);
+		if (Files.exists(target) || !Files.isRegularFile(source)) return;
+		try {
+			if (!isLegacyGuiBlurFile(source)) return;
+			Files.copy(source, target);
+			Blur.LOGGER.info("Imported {} from {}", target, source);
+		} catch (Exception e) {
+			Blur.LOGGER.warn("Failed to import {} from {}", target, source, e);
+		}
+	}
+
+	private static boolean isLegacyGuiBlurFile(Path file) throws IOException {
+		try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+			JsonElement json = new JsonParser().parse(reader);
+			if (!json.isJsonObject()) return false;
+			JsonObject object = json.getAsJsonObject();
+			return object.has("enabled") || object.has("gradientStartColor");
+		}
 	}
 
 	public void load() {
