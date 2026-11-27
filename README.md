@@ -6,7 +6,7 @@ Legacy GUI Blur adds configurable blur, gradients, and fade animations behind Mi
 
 ## Configuration
 
-Use Mod Menu's **Configure** button to open OneConfig, or edit `config/blur.json`. The file retains Blur+'s current screen, style, and animation options. The 1.8.9 port also stores `radius`, because this version has no vanilla menu-blur slider.
+Use Mod Menu's **Configure** button to open OneConfig, or edit `config/legacyguiblur.json`. The file retains Blur+'s current screen, style, and animation options. The 1.8.9 port also stores `radius`, because this version has no vanilla menu-blur slider.
 
 ## Build
 
