@@ -133,7 +133,9 @@ public final class BlurConfig extends Config {
 			JsonElement json = new JsonParser().parse(reader);
 			if (!json.isJsonObject()) return false;
 			JsonObject object = json.getAsJsonObject();
-			return object.has("enabled") || object.has("gradientStartColor");
+			if (object.has("enabled")) return true;
+			JsonElement color = object.get("gradientStartColor");
+			return color != null && color.isJsonObject();
 		}
 	}
 
